@@ -81,14 +81,17 @@ const Transactions = function(config, rpcData) {
     ]);
 
     // Add Auxiliary Data to ScriptSig
+    let auxSig;
+    let auxSigLength = 0;
     if (_this.config.auxiliary && _this.config.auxiliary.enabled && _this.rpcData.auxData) {
-      scriptSig = Buffer.concat([
+      auxSig = Buffer.concat([
         scriptSig,
         Buffer.from(_this.config.auxiliary.coin.header, 'hex'),
         Buffer.from(_this.rpcData.auxData.hash, 'hex'),
         utils.packUInt32LE(1),
         utils.packUInt32LE(0)
       ]);
+      auxSigLength = auxSig.length
     }
 
     // Build First Part of Generation Transaction
@@ -97,7 +100,7 @@ const Transactions = function(config, rpcData) {
       utils.varIntBuffer(1),
       utils.uint256BufferFromHash(txInPrevOutHash),
       utils.packUInt32LE(txInPrevOutIndex),
-      utils.varIntBuffer(scriptSig.length + placeholder.length),
+      utils.varIntBuffer(scriptSig.length + auxSigLength + placeholder.length),
       scriptSig,
     ]);
 
@@ -155,7 +158,7 @@ const Transactions = function(config, rpcData) {
     ]));
 
     // Build Second Part of Generation Transaction
-    const p2 = Buffer.concat([
+    let p2 = Buffer.concat([
       utils.packUInt32LE(txInSequence),
       utils.varIntBuffer(txOutputBuffers.length),
       Buffer.concat(txOutputBuffers),
@@ -163,6 +166,13 @@ const Transactions = function(config, rpcData) {
       utils.varIntBuffer(txExtraPayload.length),
       txExtraPayload
     ]);
+
+    if (_this.config.auxiliary && _this.config.auxiliary.enabled && _this.rpcData.auxData) {
+      p2 = Buffer.concat([
+        auxSig,
+        p2
+      ])
+    }
 
     return [p1, p2];
   };

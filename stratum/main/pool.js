@@ -693,7 +693,8 @@ const Pool = function(config, configMain, callback) {
   this.handleAuxiliaryTemplate = function(callback) {
 
     // Build Daemon Commands
-    const commands = [['getauxblock', []]];
+    // const commands = [['getauxblock', []]];
+    const commands = [['createauxblock', [_this.config.auxiliary.address]]];
 
     // Handle Auxiliary Block Template Updates
     if (_this.auxiliary.enabled) {
@@ -727,8 +728,10 @@ const Pool = function(config, configMain, callback) {
 
     // Build Daemon Commands
     const auxProof = Buffer.concat([utils.varIntBuffer(0), utils.packInt32LE(0)]);
-    const auxPow = Buffer.concat([ shareData.coinbase, shareData.header, coinbaseProof, auxProof, hexData ]);
-    const commands = [['getauxblock', [_this.auxiliary.rpcData.hash, auxPow.toString('hex')]]];
+    // const auxPow = Buffer.concat([ shareData.coinbase, shareData.header, coinbaseProof, auxProof, hexData ]);
+    const auxPow = Buffer.concat([ shareData.coinbase, coinbaseProof, auxProof, hexData ]);
+    // const commands = [['getauxblock', [_this.auxiliary.rpcData.hash, auxPow.toString('hex')]]];
+    const commands = [['submitauxblock', [_this.auxiliary.rpcData.hash, auxPow.toString('hex')]]];
 
     // Submit Block to Daemon
     _this.auxiliary.daemon.sendCommands(commands, false, (results) => {
@@ -1211,7 +1214,8 @@ const Pool = function(config, configMain, callback) {
   this.setupAuxiliaryBlockchain = function(callback) {
 
     // Build Daemon Commands
-    const commands = [['getauxblock', []]];
+    // const commands = [['getauxblock', []]];
+    const commands = [['createauxblock', [_this.config.auxiliary.address]]];
 
     // Check if Blockchain is Fully Synced
     if (_this.auxiliary.enabled) {
